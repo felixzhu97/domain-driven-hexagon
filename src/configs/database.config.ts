@@ -1,8 +1,6 @@
 import { get } from 'env-var';
 import '../libs/utils/dotenv';
 
-// https://github.com/Sairyss/backend-best-practices#configuration
-
 export const databaseConfig = {
   type: 'postgres',
   host: get('DB_HOST').required().asString(),
@@ -12,4 +10,15 @@ export const databaseConfig = {
   database: get('DB_NAME').required().asString(),
 };
 
-export const postgresConnectionUri = `postgres://${databaseConfig.username}:${databaseConfig.password}@${databaseConfig.host}/${databaseConfig.database}`;
+function getPostgresConnectionUri(): string {
+  const url = new URL('postgres://localhost');
+  url.username = databaseConfig.username;
+  url.password = databaseConfig.password;
+  url.hostname = databaseConfig.host;
+  url.port = String(databaseConfig.port);
+  url.pathname = `/${databaseConfig.database}`;
+
+  return url.toString();
+}
+
+export const postgresConnectionUri = getPostgresConnectionUri();

@@ -5,17 +5,31 @@ import { createPool } from 'slonik';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 
-// use .env or .env.test depending on NODE_ENV variable
 const envPath = path.resolve(
   __dirname,
   process.env.NODE_ENV === 'test' ? '../.env.test' : '../.env',
 );
 dotenv.config({ path: envPath });
 
+function getConnectionUri(): string {
+  const username = process.env.DB_USERNAME ?? '';
+  const password = process.env.DB_PASSWORD ?? '';
+  const host = process.env.DB_HOST ?? 'localhost';
+  const port = process.env.DB_PORT ?? '5432';
+  const database = process.env.DB_NAME ?? '';
+
+  const url = new URL('postgres://localhost');
+  url.username = username;
+  url.password = password;
+  url.hostname = host;
+  url.port = port;
+  url.pathname = `/${database}`;
+
+  return url.toString();
+}
+
 export async function getMigrator() {
-  const pool = await createPool(
-    `postgres://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}`,
-  );
+  const pool = await createPool(getConnectionUri());
 
   const migrator = new SlonikMigrator({
     migrationsPath: path.resolve(__dirname, 'migrations'),
